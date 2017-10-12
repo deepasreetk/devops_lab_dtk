@@ -1,0 +1,23 @@
+---
+- hosts: localhost
+  become: true
+  tasks:
+    - name: Install mysql server
+      apt: name=mysql-server state=present
+    - name: Start and enable mysql server
+      service: name=mysql state=started  enabled=yes
+      notify: restart mysql server
+    - name: install python mysql
+      apt: name=python-mysqldb state=present
+    - name: create mysql db
+      mysql_db: name=mydb state=present
+    - name: create mysql admin user
+      mysql_user: name=dbuser password=db123 priv='*.*:ALL' state=present
+    - name: copy sql file to remote
+      copy: src=mysql.sql dest=/tmp/mysql.sql
+    - name: import tables and populate data
+      mysql_db: name=mydb state=import target=/tmp/mysql.sql
+
+  handlers:
+    - name: restart mysql server
+      service: name=mysql state=restarted
